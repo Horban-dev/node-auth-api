@@ -2,11 +2,10 @@ import express, { Express } from 'express';
 import { Server } from 'http';
 import { inject, injectable } from 'inversify';
 import { ExeptionFilter } from './errors/exeption.filter';
-import { LoggerService } from './logger/logger.sevice';
 import { TYPES } from './types';
 import { UserController } from './users/users.controller';
 import { ILogger } from './logger/logger.interface';
-
+import { json } from 'body-parser';
 @injectable()
 export class App {
 	app: Express;
@@ -18,7 +17,10 @@ export class App {
 		@inject(TYPES.ExeptionFilter) private exeptionFilter: ExeptionFilter,
 	) {
 		this.app = express();
-		this.port = 3001;
+		this.port = 8000;
+	}
+	useMiddleware(): void {
+		this.app.use(json());
 	}
 	useRoutes(): void {
 		this.app.use('/users', this.userController.router);
@@ -27,6 +29,7 @@ export class App {
 		this.app.use(this.exeptionFilter.catch.bind(this.exeptionFilter));
 	}
 	public async init(): Promise<void> {
+		this.useMiddleware();
 		this.useRoutes();
 		this.useExeptionFilters();
 		this.server = this.app.listen(this.port);
